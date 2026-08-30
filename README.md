@@ -81,7 +81,7 @@ eli-pattern-generator
 
 ## Build the Windows application
 
-The repository contains a dedicated PyInstaller setup in `release/` for producing a portable **Windows x64** application. The tracked application icon is `Icon/favicon.ico`.
+The repository contains a dedicated PyInstaller setup in `release/` for producing a **single-file Windows x64 executable**. The tracked application icon is `Icon/favicon.ico`.
 
 ### One-command build
 
@@ -91,16 +91,13 @@ From the repository root, with the project `.venv` available:
 powershell -ExecutionPolicy Bypass -File .\\release\\build-windows.ps1
 ```
 
-The script installs the release toolchain, runs the tests, cleans previous PyInstaller output, and builds:
+The script installs the release toolchain, runs the tests, cleans previous PyInstaller output, and builds exactly one application file:
 
 ```text
-dist/
-└── eli_lab-pattern-generator/
-    ├── eli_lab-pattern-generator.exe
-    └── ...required runtime files...
+dist\\eli_lab-pattern-generator.exe
 ```
 
-The application is intentionally built as a **one-directory portable bundle** rather than a fragile one-file executable. Zip the complete `dist/eli_lab-pattern-generator/` directory and upload that ZIP to the GitHub Release.
+The executable is a PyInstaller **one-file** bundle. End users do not need Python, PySide6, Pillow, or OpenSimplex installed separately.
 
 ### Direct PyInstaller command
 
@@ -113,8 +110,10 @@ python -m PyInstaller --noconfirm --clean release\\eli_lab_pattern_generator.spe
 The executable will be at:
 
 ```text
-dist\\eli_lab-pattern-generator\\eli_lab-pattern-generator.exe
+dist\\eli_lab-pattern-generator.exe
 ```
+
+The spec uses `run.py` as the frozen entry point. This avoids package-relative import failures that can occur when PyInstaller executes `pattern_app/main.py` directly as `__main__`.
 
 Do not commit `build/`, `dist/`, or generated release artifacts.
 
@@ -122,7 +121,7 @@ Do not commit `build/`, `dist/`, or generated release artifacts.
 
 1. Update the version in `pyproject.toml`.
 2. Update `CHANGELOG.md`.
-3. Run the Windows build script and test the resulting application.
+3. Run `release/build-windows.ps1` and launch the resulting `.exe` to test it on Windows.
 4. Create a Git tag matching the package version, for example:
 
 ```powershell
@@ -130,7 +129,9 @@ git tag v2.1.0
 git push origin v2.1.0
 ```
 
-5. Upload the tested portable ZIP to the GitHub Release. You can add the `.exe` separately if you prefer, but the complete PyInstaller directory should remain intact for users who download the portable build.
+5. Upload `dist/eli_lab-pattern-generator.exe` to the GitHub Release.
+
+The GitHub Actions release workflow follows the same one-file Windows build and publishes the executable together with the Python package artifacts.
 
 ## Presets
 
