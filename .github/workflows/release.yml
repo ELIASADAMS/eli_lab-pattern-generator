@@ -50,22 +50,26 @@ jobs:
       - name: Build Python distributions
         run: python -m build --outdir release/artifacts
 
-      - name: Build Windows portable application
+      - name: Build Windows one-file executable
         run: python -m PyInstaller --noconfirm --clean release/eli_lab_pattern_generator.spec
 
-      - name: Package Windows portable ZIP
+      - name: Verify one-file executable
         shell: pwsh
         run: |
-          $source = 'dist/eli_lab-pattern-generator'
-          $zip = 'release/artifacts/eli_lab-pattern-generator-windows-x64.zip'
-          if (Test-Path $zip) { Remove-Item $zip -Force }
-          Compress-Archive -Path "$source/*" -DestinationPath $zip -CompressionLevel Optimal
+          $exe = 'dist/eli_lab-pattern-generator.exe'
+          if (-not (Test-Path $exe)) {
+            throw "Expected one-file executable was not created: $exe"
+          }
+          Write-Host "Windows executable: $exe"
 
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
           name: eli_lab-pattern-generator-release
-          path: release/artifacts/*
+          path: |
+            dist/eli_lab-pattern-generator.exe
+            release/artifacts/*.whl
+            release/artifacts/*.tar.gz
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -78,5 +82,9 @@ jobs:
             Write-Host 'Manual workflow run: build artifacts were created, but no GitHub Release was published.'
             exit 0
           }
-          $files = Get-ChildItem 'release/artifacts' -File | ForEach-Object { $_.FullName }
+          $files = @(
+            'dist/eli_lab-pattern-generator.exe'
+            (Get-ChildItem 'release/artifacts/*.whl').FullName
+            (Get-ChildItem 'release/artifacts/*.tar.gz').FullName
+          )
           gh release create $tag --title "eli_lab Pattern Generator $tag" --generate-notes $files
