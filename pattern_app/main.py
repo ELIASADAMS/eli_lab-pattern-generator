@@ -30,7 +30,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .generator import PatternConfig, PatternRenderer
+try:
+    from .generator import PatternConfig, PatternRenderer
+except ImportError:  # pragma: no cover - supports ``python pattern_app/main.py``
+    from generator import PatternConfig, PatternRenderer
 
 
 class WorkerSignals(QObject):
@@ -378,23 +381,25 @@ def build_app() -> QApplication:
     app.setApplicationName(MainWindow.APP_NAME); app.setStyle("Fusion")
     app.setStyleSheet("""
         QMainWindow, QWidget { background: #151515; color: #e9e9e9; }
-        #ControlPanel, QGroupBox, QTabWidget::pane { background: #1c1c1c; border: 1px solid #333; }
-        QGroupBox { border-radius: 8px; margin-top: 10px; }
-        QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 4px; color: #b8b8b8; }
-        QLineEdit, QSpinBox, QComboBox { background: #232323; border: 1px solid #3b3b3b; padding: 6px; border-radius: 5px; }
-        QPushButton { background: #282828; border: 1px solid #444; border-radius: 6px; padding: 7px 10px; }
-        QPushButton:hover { background: #333; }
-        QTabBar::tab { background: #222; padding: 8px 13px; margin-right: 2px; }
-        QTabBar::tab:selected { background: #333; }
-        QScrollArea { border: none; }
+        QFrame#ControlPanel { background: #1c1c1c; border: 1px solid #333; border-radius: 8px; }
         QLabel#Header { font-size: 16px; font-weight: 700; letter-spacing: 1px; }
-        QLabel#SubHeader { color: #8f8f8f; margin-bottom: 8px; }
+        QLabel#SubHeader { color: #9b9b9b; }
+        QGroupBox { border: 1px solid #343434; border-radius: 6px; margin-top: 8px; padding-top: 10px; }
+        QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 4px; }
+        QLineEdit, QSpinBox, QComboBox { background: #101010; border: 1px solid #3b3b3b; padding: 5px; border-radius: 4px; }
+        QPushButton { background: #292929; border: 1px solid #444; padding: 7px 10px; border-radius: 4px; }
+        QPushButton:hover { background: #343434; }
+        QTabWidget::pane { border: 0; }
+        QTabBar::tab { padding: 7px 12px; }
     """)
     return app
 
 
 def main() -> int:
-    app = build_app(); window = MainWindow(); window.show(); return app.exec()
+    app = build_app()
+    window = MainWindow()
+    window.show()
+    return app.exec()
 
 
 if __name__ == "__main__":
