@@ -2,10 +2,10 @@
 # Build from the repository root with:
 #   python -m PyInstaller --noconfirm --clean release/eli_lab_pattern_generator.spec
 
-from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
+from PyInstaller.building.build_main import Analysis, COLLECT, EXE, PYZ
+
 
 block_cipher = None
-
 
 a = Analysis(
     ['pattern_app/main.py'],
@@ -25,9 +25,8 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='eli_lab-pattern-generator',
     debug=False,
     bootloader_ignore_signals=False,
