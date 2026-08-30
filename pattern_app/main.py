@@ -4,7 +4,6 @@ import json
 import sys
 from pathlib import Path
 
-from PIL.ImageQt import ImageQt
 from PySide6.QtCore import QObject, QRunnable, QSettings, QSize, Qt, QThreadPool, QTimer, Signal, Slot
 from PySide6.QtGui import QAction, QColor, QImage, QPixmap
 from PySide6.QtWidgets import (
@@ -34,6 +33,15 @@ try:
     from .generator import PatternConfig, PatternRenderer
 except ImportError:  # pragma: no cover - supports ``python pattern_app/main.py``
     from generator import PatternConfig, PatternRenderer
+
+
+def pil_to_qimage(image) -> QImage:
+    """Convert a Pillow RGBA image to an owned Qt QImage without PIL.ImageQt."""
+    rgba = image.convert("RGBA")
+    width, height = rgba.size
+    data = rgba.tobytes("raw", "RGBA")
+    qimage = QImage(data, width, height, width * 4, QImage.Format_RGBA8888)
+    return qimage.copy()
 
 
 class WorkerSignals(QObject):
@@ -308,7 +316,7 @@ class MainWindow(QMainWindow):
         if generation_id != self.generation_id: return
         self.current_result = result
         self.seed_status.setText(f"seed: {result.seed}")
-        self.preview.set_image(QImage(ImageQt(result.image).copy()))
+        self.preview.set_image(pil_to_qimage(result.image))
         self.status.setText(f"Ready · {result.elapsed:.2f}s · {result.image.width}×{result.image.height}")
         self.generate_button.setEnabled(True)
 
