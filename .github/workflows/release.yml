@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      PYTHONIOENCODING: utf-8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt
+
+      - name: Verify version matches tag
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
+            Write-Host "Manual workflow run: skipping tag/version check."
+            exit 0
+          }
+          $version = (Get-Content pyproject.toml | Select-String '^version\s*=\s*"([^"]+)"$').Matches.Groups[1].Value
+          $expected = $tag.Substring(1)
+          if ($version -ne $expected) {
+            throw "Tag $tag does not match pyproject version $version."
+          }
+          Write-Host "Version verified: $version"
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Build Python distributions
+        run: python -m build --outdir release/artifacts
+
+      - name: Build Windows portable application
+        run: python -m PyInstaller --noconfirm --clean release/eli_lab_pattern_generator.spec
+
+      - name: Package Windows portable ZIP
+        shell: pwsh
+        run: |
+          $source = 'dist/eli_lab-pattern-generator'
+          $zip = 'release/artifacts/eli_lab-pattern-generator-windows-x64.zip'
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "$source/*" -DestinationPath $zip -CompressionLevel Optimal
+
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: eli_lab-pattern-generator-release
+          path: release/artifacts/*
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
+            Write-Host 'Manual workflow run: build artifacts were created, but no GitHub Release was published.'
+            exit 0
+          }
+          $files = Get-ChildItem 'release/artifacts' -File | ForEach-Object { $_.FullName }
+          gh release create $tag --title "eli_lab Pattern Generator $tag" --generate-notes $files
