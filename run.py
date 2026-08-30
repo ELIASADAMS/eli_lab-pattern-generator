@@ -1,7 +1,6 @@
 """Convenient PyCharm-friendly launcher for the eli_lab Pattern Generator."""
 
-from pattern_app import main as app_main
-from pattern_app.main import MainWindow
+from pattern_app.main import MainWindow, main as app_main
 
 
 def _wire_auto_preview_safely(self):
@@ -25,12 +24,12 @@ def _wire_auto_preview_safely(self):
     for widget in widgets:
         if hasattr(widget, "textChanged"):
             widget.textChanged.connect(self._request_preview)
-        elif hasattr(widget, "valueChanged"):
-            widget.valueChanged.connect(self._request_preview)
         elif hasattr(widget, "currentTextChanged"):
             widget.currentTextChanged.connect(self._request_preview)
         elif hasattr(widget, "toggled"):
             widget.toggled.connect(self._request_preview)
+        elif hasattr(widget, "valueChanged"):
+            widget.valueChanged.connect(self._request_preview)
 
     for slider in (
         self.density,
@@ -43,9 +42,8 @@ def _wire_auto_preview_safely(self):
         slider.valueChanged.connect(lambda _value: self._request_preview())
 
 
-# Keep the application launchable from PyCharm/run.py even when using an older
-# checkout of pattern_app.main. The canonical main implementation remains in
-# pattern_app.main; this only provides a robust compatibility hook.
+# PyCharm commonly runs this file directly. Install the safe signal wiring
+# before MainWindow.__init__ is invoked by pattern_app.main.main().
 MainWindow._wire_auto_preview = _wire_auto_preview_safely
 
 
