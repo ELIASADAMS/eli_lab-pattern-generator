@@ -20,11 +20,15 @@ A small procedural graphics workstation for generating abstract patterns from a 
 
 Python **3.10+** and a desktop environment supported by Qt 6.
 
-PySide6 is the official Qt-for-Python binding and is installed from PyPI; this project therefore uses Qt 6 rather than the original Tkinter UI.
+Runtime dependencies are listed in both `pyproject.toml` and `requirements.txt`:
+
+- `PySide6>=6.10`
+- `Pillow>=11.0`
+- `opensimplex>=0.4`
 
 ## Install
 
-Create a virtual environment and install the project in editable mode:
+Create a virtual environment and install the dependencies:
 
 ```bash
 python -m venv .venv
@@ -36,28 +40,42 @@ python -m venv .venv
 source .venv/bin/activate
 
 python -m pip install -U pip
+python -m pip install -r requirements.txt
+```
+
+For development, install the project itself in editable mode:
+
+```bash
 python -m pip install -e .
 ```
 
-The project declares these runtime dependencies:
-
-- `PySide6>=6.10`
-- `Pillow>=11.0`
-- `opensimplex>=0.4`
-
 ## Run
 
-After installation:
+The most reliable repository-local launcher is:
+
+```bash
+python run.py
+```
+
+After installing the package, the console entry point is also available:
 
 ```bash
 eli-pattern-generator
 ```
 
-Or directly from the repository:
+You can also run the Qt module directly:
 
 ```bash
 python -m pattern_app.main
 ```
+
+For convenience, `pattern_app/main.py` also supports direct execution:
+
+```bash
+python pattern_app/main.py
+```
+
+`pattern_app/__init__.py` has a compatible fallback for direct execution as well, but running the package through `run.py` or `python -m pattern_app.main` is preferred.
 
 ## Controls
 
@@ -90,6 +108,10 @@ pattern_app/
 ├── __init__.py
 ├── generator.py      # Pure procedural renderer + SVG generation
 └── main.py           # PySide6 application and controls
+
+run.py                # Repository-local launcher
+requirements.txt      # Runtime dependency list
+pyproject.toml        # Packaging and console entry point
 
 tests/
 └── test_generator.py
