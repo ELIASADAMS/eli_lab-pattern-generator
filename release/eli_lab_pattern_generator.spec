@@ -1,33 +1,40 @@
 # PyInstaller spec for the eli_lab Pattern Generator.
-# Build from the repository root with:
+# Run from the repository root:
 #   python -m PyInstaller --noconfirm --clean release/eli_lab_pattern_generator.spec
+
+from pathlib import Path
 
 from PyInstaller.building.build_main import Analysis, COLLECT, EXE, PYZ
 
 
-block_cipher = None
+ROOT = Path(SPEC).resolve().parent.parent
+ICON = ROOT / "Icon" / "favicon.ico"
+
+if not ICON.exists():
+    raise FileNotFoundError(f"Application icon not found: {ICON}")
+
 
 a = Analysis(
-    ['pattern_app/main.py'],
-    pathex=['.'],
+    [str(ROOT / "pattern_app" / "main.py")],
+    pathex=[str(ROOT)],
     binaries=[],
     datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['PyQt5', 'PyQt6', 'PySide2'],
+    excludes=["PyQt5", "PyQt6", "PySide2"],
     noarchive=False,
 )
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 exe = EXE(
     pyz,
     a.scripts,
     [],
     exclude_binaries=True,
-    name='eli_lab-pattern-generator',
+    name="eli_lab-pattern-generator",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -38,6 +45,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=str(ICON),
 )
 
 coll = COLLECT(
@@ -49,5 +57,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='eli_lab-pattern-generator',
+    name="eli_lab-pattern-generator",
 )
