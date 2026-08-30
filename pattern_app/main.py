@@ -280,17 +280,29 @@ class MainWindow(QMainWindow):
         action = QAction("Quit", self); action.triggered.connect(self.close); menu.addAction(action)
 
     def _wire_auto_preview(self):
-        widgets = [self.width, self.height, self.seed, self.background, self.palette, self.symmetry, self.grid, self.use_blocks, self.use_circles, self.use_lines, self.use_triangles, self.use_noise, self.noise_octaves, self.gradient, self.use_accents]
-        for widget in widgets:
-            if isinstance(widget, QLineEdit): widget.textChanged.connect(self._request_preview)
-            elif isinstance(widget, QSpinBox): widget.valueChanged.connect(self._request_preview)
-            elif isinstance(widget, QComboBox): widget.currentTextChanged.connect(self._request_preview)
-            else: widget.toggled.connect(self._request_preview)
-        for slider in (self.density, self.complexity, self.noise_scale, self.noise_amplitude, self.blur):
-            slider.valueChanged.connect(lambda _value: self._request_preview())
+        value_widgets = [
+            self.width, self.height, self.seed, self.background, self.palette,
+            self.symmetry, self.noise_octaves,
+        ]
+        checkboxes = [
+            self.use_blocks, self.use_circles, self.use_lines,
+            self.use_triangles, self.use_noise, self.gradient, self.use_accents,
+        ]
+        for widget in value_widgets:
+            if isinstance(widget, QLineEdit):
+                widget.textChanged.connect(self._request_preview)
+            elif isinstance(widget, QSpinBox):
+                widget.valueChanged.connect(self._request_preview)
+            elif isinstance(widget, QComboBox):
+                widget.currentTextChanged.connect(self._request_preview)
+        for widget in checkboxes:
+            widget.toggled.connect(self._request_preview)
+        for slider in (self.density, self.complexity, self.grid, self.noise_scale, self.noise_amplitude, self.blur):
+            slider.valueChanged.connect(self._request_preview)
 
     def _request_preview(self, *args):
-        if self.auto_preview.isChecked(): self._debounce.start()
+        if self.auto_preview.isChecked():
+            self._debounce.start()
 
     def _config(self) -> PatternConfig:
         return PatternConfig(
