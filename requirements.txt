@@ -1,0 +1,3 @@
+Pillow>=11.0
+PySide6>=6.10
+opensimplex>=0.4
